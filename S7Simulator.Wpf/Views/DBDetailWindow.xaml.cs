@@ -1,4 +1,4 @@
-﻿using S7Simulator.Wpf.Models;
+using S7Simulator.Wpf.Models;
 using S7Simulator.Wpf.Plc;
 using System;
 using System.ComponentModel;
