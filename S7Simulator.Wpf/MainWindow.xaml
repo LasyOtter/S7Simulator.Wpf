@@ -1,0 +1,33 @@
+﻿<Window x:Class="S7Simulator.Wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="S7-1200 模拟器 - DB管理器" Height="600" Width="1000">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Margin="10">
+            <Button Content="导入 Excel DB" Command="{Binding ImportCommand}" Margin="5"/>
+            <Button Content="刷新列表" Command="{Binding RefreshCommand}" Margin="5"/>
+            <TextBlock Text="{Binding Status}" VerticalAlignment="Center" Margin="20,0"/>
+        </StackPanel>
+
+        <ListView Grid.Row="1" ItemsSource="{Binding DbList}" Margin="10" MouseDoubleClick="ListView_MouseDoubleClick">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="DB号" DisplayMemberBinding="{Binding DbNumber}" Width="80"/>
+                    <GridViewColumn Header="名称" DisplayMemberBinding="{Binding Name}" Width="150"/>
+                    <GridViewColumn Header="变量数量" DisplayMemberBinding="{Binding Variables.Count}" Width="100"/>
+                    <GridViewColumn Header="导入时间" DisplayMemberBinding="{Binding ImportedAt, StringFormat=yyyy-MM-dd HH:mm}" Width="150"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+
+        <StatusBar Grid.Row="2">
+            <TextBlock Text="{Binding ServerStatus}"/>
+        </StatusBar>
+    </Grid>
+</Window>

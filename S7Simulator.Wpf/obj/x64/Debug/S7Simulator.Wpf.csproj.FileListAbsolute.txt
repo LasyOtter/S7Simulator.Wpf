@@ -1,0 +1,6 @@
+D:\workspace\dotnet\S7Simulator.Wpf\S7Simulator.Wpf\obj\x64\Debug\S7Simulator.Wpf.csproj.AssemblyReference.cache
+D:\workspace\dotnet\S7Simulator.Wpf\S7Simulator.Wpf\obj\x64\Debug\MainWindow.baml
+D:\workspace\dotnet\S7Simulator.Wpf\S7Simulator.Wpf\obj\x64\Debug\MainWindow.g.cs
+D:\workspace\dotnet\S7Simulator.Wpf\S7Simulator.Wpf\obj\x64\Debug\App.g.cs
+D:\workspace\dotnet\S7Simulator.Wpf\S7Simulator.Wpf\obj\x64\Debug\S7Simulator.Wpf_Content.g.cs
+D:\workspace\dotnet\S7Simulator.Wpf\S7Simulator.Wpf\obj\x64\Debug\S7Simulator.Wpf_MarkupCompile.cache
