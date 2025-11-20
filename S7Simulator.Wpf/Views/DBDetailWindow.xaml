@@ -1,4 +1,4 @@
-﻿<Window x:Class="S7Simulator.Wpf.Views.DBDetailWindow"
+<Window x:Class="S7Simulator.Wpf.Views.DBDetailWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="DB变量详情" Height="650" Width="1200">
@@ -51,21 +51,16 @@
                                                 </Setter>
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding DataType}" Value="REAL">
-                                                <Setter Property="ContentTemplate">
-                                                    <Setter.Value>
-                                                        <DataTemplate>
-                                                            <TextBox Text="{Binding CurrentValue, UpdateSourceTrigger=LostFocus}" 
-                                                                     MinWidth="120">
-                                                                <TextBox.Style>
-                                                                    <Style TargetType="TextBox">
-                                                                        <EventSetter Event="PreviewTextInput" Handler="NumberValidationTextBox"/>
-                                                                    </Style>
-                                                                </TextBox.Style>
-                                                            </TextBox>
-                                                        </DataTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </DataTrigger>
+                                                                                             <Setter Property="ContentTemplate">
+                                                                                                 <Setter.Value>
+                                                                                                     <DataTemplate>
+                                                                                                         <TextBox Text="{Binding CurrentValue, UpdateSourceTrigger=LostFocus}"
+                                                                                                                  MinWidth="120"
+                                                                                                                  PreviewTextInput="NumberValidationTextBox"/>
+                                                                                                     </DataTemplate>
+                                                                                                 </Setter.Value>
+                                                                                             </Setter>
+                                                                                         </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </ContentControl.Style>
