@@ -5,7 +5,7 @@ namespace S7Simulator.Wpf.Plc;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
+using System.Globalization;
 
 public class PlcMemory
 {
@@ -74,35 +74,48 @@ public class PlcMemory
     
     public void ApplyDbStructure(DbInfo db)
     {
-        var raw = DBs.GetOrAdd(db.DbNumber, _ => new byte[65536]);
+        DBs.GetOrAdd(db.DbNumber, _ => new byte[65536]);
 
-        foreach (var v in db.Variables)
+        foreach (var variable in db.Variables)
         {
-            try
+            var initialValue = variable.InitialValue?.Trim() ?? string.Empty;
+
+            switch (variable.DataType)
             {
-                switch (v.DataType)
-                {
-                    case "BOOL":
-                        WriteBool(db.DbNumber, v.ByteOffset, v.BitOffset, bool.Parse(v.InitialValue));
-                        break;
-                    case "BYTE":
-                        WriteByte(db.DbNumber, v.ByteOffset, byte.Parse(v.InitialValue));
-                        break;
-                    case "INT":
-                        WriteInt(db.DbNumber, v.ByteOffset, short.Parse(v.InitialValue));
-                        break;
-                    case "DINT":
-                        WriteDInt(db.DbNumber, v.ByteOffset, int.Parse(v.InitialValue));
-                        break;
-                    case "REAL":
-                        WriteReal(db.DbNumber, v.ByteOffset, float.Parse(v.InitialValue.Replace('.', ',')));
-                        break;
-                    case "STRING":
-                        WriteString(db.DbNumber, v.ByteOffset, 254, v.InitialValue);
-                        break;
-                }
+                case "BOOL":
+                    if (TryParseBool(initialValue, out var boolValue))
+                    {
+                        WriteBool(db.DbNumber, variable.ByteOffset, variable.BitOffset, boolValue);
+                    }
+                    break;
+                case "BYTE":
+                    if (byte.TryParse(initialValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var byteValue))
+                    {
+                        WriteByte(db.DbNumber, variable.ByteOffset, byteValue);
+                    }
+                    break;
+                case "INT":
+                    if (short.TryParse(initialValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var intValue))
+                    {
+                        WriteInt(db.DbNumber, variable.ByteOffset, intValue);
+                    }
+                    break;
+                case "DINT":
+                    if (int.TryParse(initialValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var dintValue))
+                    {
+                        WriteDInt(db.DbNumber, variable.ByteOffset, dintValue);
+                    }
+                    break;
+                case "REAL":
+                    if (float.TryParse(initialValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var realValue))
+                    {
+                        WriteReal(db.DbNumber, variable.ByteOffset, realValue);
+                    }
+                    break;
+                case "STRING":
+                    WriteString(db.DbNumber, variable.ByteOffset, 254, initialValue);
+                    break;
             }
-            catch { /* 忽略解析失败的初始值 */ }
         }
     }
 
@@ -113,5 +126,28 @@ public class PlcMemory
         data[byteOffset] = (byte)maxLen;
         data[byteOffset + 1] = (byte)len;
         System.Text.Encoding.ASCII.GetBytes(value, 0, len, data, byteOffset + 2);
+    }
+
+    private static bool TryParseBool(string value, out bool result)
+    {
+        if (bool.TryParse(value, out result))
+        {
+            return true;
+        }
+
+        if (value == "1")
+        {
+            result = true;
+            return true;
+        }
+
+        if (value == "0")
+        {
+            result = false;
+            return true;
+        }
+
+        result = false;
+        return false;
     }
 }

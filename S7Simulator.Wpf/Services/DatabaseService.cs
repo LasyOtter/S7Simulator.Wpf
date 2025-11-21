@@ -1,10 +1,9 @@
-﻿using Microsoft.Data.Sqlite;
+using Microsoft.Data.Sqlite;
 using S7Simulator.Wpf.Models;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace S7Simulator.Wpf.Services;
 
@@ -44,24 +43,24 @@ public static class DatabaseService
         conn.Open();
         using var tran = conn.BeginTransaction();
 
-        // 删除旧变量
         var del = conn.CreateCommand();
         del.CommandText = "DELETE FROM Variables WHERE DbNumber = $db";
         del.Parameters.AddWithValue("$db", db.DbNumber);
         del.ExecuteNonQuery();
 
-        // 更新 DB 信息
         var cmd = conn.CreateCommand();
         cmd.CommandText = """
             INSERT OR REPLACE INTO DbInfo (DbNumber, Name, ImportedAt)
             VALUES ($num, $name, $time)
             """;
+
+        var importedAt = DateTime.Now;
+        db.ImportedAt = importedAt;
         cmd.Parameters.AddWithValue("$num", db.DbNumber);
         cmd.Parameters.AddWithValue("$name", db.Name);
-        cmd.Parameters.AddWithValue("$time", DateTime.Now.ToString("o"));
+        cmd.Parameters.AddWithValue("$time", importedAt.ToString("o"));
         cmd.ExecuteNonQuery();
 
-        // 插入新变量
         foreach (var v in db.Variables)
         {
             var vcmd = conn.CreateCommand();
@@ -79,42 +78,82 @@ public static class DatabaseService
             vcmd.Parameters.AddWithValue("$cmt", v.Comment ?? (object)DBNull.Value);
             vcmd.ExecuteNonQuery();
         }
+
         tran.Commit();
     }
 
     public static List<DbInfo> LoadAllDbs()
     {
-        var list = new List<DbInfo>();
         using var conn = new SqliteConnection(ConnStr);
         conn.Open();
 
-        var dbCmd = conn.CreateCommand();
-        dbCmd.CommandText = "SELECT DbNumber, Name FROM DbInfo ORDER BY DbNumber";
-        using var reader = dbCmd.ExecuteReader();
-        while (reader.Read())
-        {
-            int dbNum = reader.GetInt32(0);
-            string name = reader.GetString(1);
-            var db = new DbInfo { DbNumber = dbNum, Name = name };
+        var result = new Dictionary<int, DbInfo>();
 
-            var varCmd = conn.CreateCommand();
-            varCmd.CommandText = "SELECT Name, DataType, ByteOffset, BitOffset, InitialValue, Comment FROM Variables WHERE DbNumber = $db";
-            varCmd.Parameters.AddWithValue("$db", dbNum);
-            using var vreader = varCmd.ExecuteReader();
-            while (vreader.Read())
+        var dbCmd = conn.CreateCommand();
+        dbCmd.CommandText = "SELECT DbNumber, Name, ImportedAt FROM DbInfo ORDER BY DbNumber";
+        using (var reader = dbCmd.ExecuteReader())
+        {
+            while (reader.Read())
             {
+                var dbNumber = reader.GetInt32(0);
+                var db = new DbInfo
+                {
+                    DbNumber = dbNumber,
+                    Name = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    ImportedAt = ParseImportedAt(reader.IsDBNull(2) ? null : reader.GetString(2))
+                };
+
+                result[dbNumber] = db;
+            }
+        }
+
+        if (result.Count == 0)
+        {
+            return new List<DbInfo>();
+        }
+
+        var varCmd = conn.CreateCommand();
+        varCmd.CommandText = """
+            SELECT DbNumber, Name, DataType, ByteOffset, BitOffset, InitialValue, Comment
+            FROM Variables
+            ORDER BY DbNumber, ByteOffset, BitOffset
+            """;
+
+        using (var reader = varCmd.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                var dbNumber = reader.GetInt32(0);
+                if (!result.TryGetValue(dbNumber, out var db))
+                {
+                    continue;
+                }
+
                 db.Variables.Add(new VariableInfo
                 {
-                    Name = vreader.GetString(0),
-                    DataType = vreader.GetString(1),
-                    ByteOffset = vreader.GetInt32(2),
-                    BitOffset = vreader.IsDBNull(3) ? -1 : vreader.GetInt32(3),
-                    InitialValue = vreader.IsDBNull(4) ? "" : vreader.GetString(4),
-                    Comment = vreader.IsDBNull(5) ? "" : vreader.GetString(5)
+                    DbNumber = dbNumber,
+                    Name = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    DataType = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    ByteOffset = reader.GetInt32(3),
+                    BitOffset = reader.IsDBNull(4) ? -1 : reader.GetInt32(4),
+                    InitialValue = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
+                    Comment = reader.IsDBNull(6) ? string.Empty : reader.GetString(6)
                 });
             }
-            list.Add(db);
         }
-        return list;
+
+        return result.Values.OrderBy(db => db.DbNumber).ToList();
+    }
+
+    private static DateTime ParseImportedAt(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return DateTime.MinValue;
+        }
+
+        return DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var parsed)
+            ? parsed
+            : DateTime.MinValue;
     }
 }
