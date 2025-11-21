@@ -138,50 +138,93 @@ namespace S7Simulator.Wpf.Views
         /// </summary>
         public bool WriteValue(string newValue)
         {
-            try
+            var value = (newValue ?? string.Empty).Trim();
+            var success = false;
+
+            switch (DataType)
             {
-                switch (DataType)
-                {
-                    case "BOOL":
-                        _memory.WriteBool(_dbNumber, ByteOffset, BitOffset, bool.Parse(newValue));
-                        break;
-                    case "BYTE":
-                        _memory.WriteByte(_dbNumber, ByteOffset, byte.Parse(newValue));
-                        break;
-                    case "INT":
-                        _memory.WriteInt(_dbNumber, ByteOffset, short.Parse(newValue));
-                        break;
-                    case "DINT":
-                        _memory.WriteDInt(_dbNumber, ByteOffset, int.Parse(newValue));
-                        break;
-                    case "REAL":
-                        _memory.WriteReal(_dbNumber, ByteOffset, float.Parse(newValue.Replace(',', '.')));
-                        break;
-                    case "STRING":
-                        _memory.WriteString(_dbNumber, ByteOffset, 254, newValue);
-                        break;
-                    default:
-                        return false;
-                }
+                case "BOOL":
+                    success = TryParseBool(value, out var boolValue);
+                    if (success)
+                    {
+                        _memory.WriteBool(_dbNumber, ByteOffset, BitOffset, boolValue);
+                    }
+                    break;
+                case "BYTE":
+                    success = byte.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var byteValue);
+                    if (success)
+                    {
+                        _memory.WriteByte(_dbNumber, ByteOffset, byteValue);
+                    }
+                    break;
+                case "INT":
+                    success = short.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var intValue);
+                    if (success)
+                    {
+                        _memory.WriteInt(_dbNumber, ByteOffset, intValue);
+                    }
+                    break;
+                case "DINT":
+                    success = int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var dintValue);
+                    if (success)
+                    {
+                        _memory.WriteDInt(_dbNumber, ByteOffset, dintValue);
+                    }
+                    break;
+                case "REAL":
+                    success = float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var realValue);
+                    if (success)
+                    {
+                        _memory.WriteReal(_dbNumber, ByteOffset, realValue);
+                    }
+                    break;
+                case "STRING":
+                    _memory.WriteString(_dbNumber, ByteOffset, 254, value);
+                    success = true;
+                    break;
+            }
+
+            if (success)
+            {
                 RefreshCurrentValue();
+            }
+
+            return success;
+        }
+
+        private static bool TryParseBool(string value, out bool result)
+        {
+            if (bool.TryParse(value, out result))
+            {
                 return true;
             }
-            catch
+
+            if (value == "1")
             {
-                return false;
+                result = true;
+                return true;
             }
+
+            if (value == "0")
+            {
+                result = false;
+                return true;
+            }
+
+            result = false;
+            return false;
         }
 
         private string ReadCurrentValue()
         {
             return DataType switch
             {
-                "BOOL" => _memory.ReadBool(_dbNumber, ByteOffset, BitOffset).ToString().ToLower(),
-                "BYTE" => _memory.ReadByte(_dbNumber, ByteOffset).ToString(),
-                "INT" => _memory.ReadInt(_dbNumber, ByteOffset).ToString(),
-                "DINT" => _memory.ReadDInt(_dbNumber, ByteOffset).ToString(),
-                "REAL" => _memory.ReadReal(_dbNumber, ByteOffset).ToString("F3"),
-                "STRING" => $"\"{_memory.ReadString(_dbNumber, ByteOffset, 254)}\"",
+                "BOOL" => _memory.ReadBool(_dbNumber, ByteOffset, BitOffset).ToString().ToLowerInvariant(),
+                "BYTE" => _memory.ReadByte(_dbNumber, ByteOffset).ToString(CultureInfo.InvariantCulture),
+                "INT" => _memory.ReadInt(_dbNumber, ByteOffset).ToString(CultureInfo.InvariantCulture),
+                "DINT" => _memory.ReadDInt(_dbNumber, ByteOffset).ToString(CultureInfo.InvariantCulture),
+                "REAL" => _memory.ReadReal(_dbNumber, ByteOffset).ToString("F3", CultureInfo.InvariantCulture),
+                "STRING" => _memory.ReadString(_dbNumber, ByteOffset, 254),
                 _ => "<未知类型>"
             };
         }

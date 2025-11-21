@@ -4,6 +4,6 @@
              xmlns:local="clr-namespace:S7Simulator.Wpf"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <!--<local:BoolStringConverter x:Key="BoolConverter"/>-->
+        <local:BoolStringConverter x:Key="BoolConverter"/>
     </Application.Resources>
 </Application>

@@ -1,21 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Windows.Threading;
 using CommunityToolkit.Mvvm.Input;
 using S7Simulator.Wpf.Models;
 using S7Simulator.Wpf.Plc;
@@ -51,11 +40,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         _server.Start();
 
         LoadDbs();
-
-        // 实时刷新当前值定时器
-        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
-        timer.Tick += (s, e) => DbList.ToList().ForEach(db => db.Variables.ToList());
-        timer.Start();
     }
 
     private void LoadDbs()
@@ -64,7 +48,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         var dbs = DatabaseService.LoadAllDbs();
         foreach (var db in dbs)
         {
-            _memory.ApplyDbStructure(db); // 确保内存里有最新初始值
+            _memory.ApplyDbStructure(db);
             DbList.Add(db);
         }
         Status = $"加载了 {DbList.Count} 个 DB";
@@ -80,7 +64,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 ExcelImporter.ImportFromExcel(dlg.FileName, _memory, s => Status = s);
                 LoadDbs();
             }
-            catch (Exception ex) { MessageBox.Show(ex.Message); }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
     }
 
@@ -89,7 +76,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         if (sender is ListView lv && lv.SelectedItem is DbInfo db)
         {
             new DBDetailWindow(db, _memory) { Owner = this }.ShowDialog();
-            // 双击后刷新当前值
             OnPropertyChanged(nameof(DbList));
         }
     }
