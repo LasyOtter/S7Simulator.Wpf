@@ -3,6 +3,7 @@ using S7Simulator.Wpf.Models;
 namespace S7Simulator.Wpf.Plc;
 
 using System;
+using System.Buffers.Binary;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -46,17 +47,23 @@ public class PlcMemory
     public byte ReadByte(int dbNumber, int byteOffset) => GetArea(dbNumber)[byteOffset];
     public void WriteByte(int dbNumber, int byteOffset, byte value) => GetArea(dbNumber)[byteOffset] = value;
 
-    public short ReadInt(int dbNumber, int byteOffset) => BitConverter.ToInt16(GetArea(dbNumber), byteOffset);
+    public short ReadInt(int dbNumber, int byteOffset)
+        => BinaryPrimitives.ReadInt16BigEndian(GetArea(dbNumber).AsSpan(byteOffset));
+
     public void WriteInt(int dbNumber, int byteOffset, short value)
-        => Buffer.BlockCopy(BitConverter.GetBytes(value), 0, GetArea(dbNumber), byteOffset, 2);
+        => BinaryPrimitives.WriteInt16BigEndian(GetArea(dbNumber).AsSpan(byteOffset), value);
 
-    public int ReadDInt(int dbNumber, int byteOffset) => BitConverter.ToInt32(GetArea(dbNumber), byteOffset);
+    public int ReadDInt(int dbNumber, int byteOffset)
+        => BinaryPrimitives.ReadInt32BigEndian(GetArea(dbNumber).AsSpan(byteOffset));
+
     public void WriteDInt(int dbNumber, int byteOffset, int value)
-        => Buffer.BlockCopy(BitConverter.GetBytes(value), 0, GetArea(dbNumber), byteOffset, 4);
+        => BinaryPrimitives.WriteInt32BigEndian(GetArea(dbNumber).AsSpan(byteOffset), value);
 
-    public float ReadReal(int dbNumber, int byteOffset) => BitConverter.ToSingle(GetArea(dbNumber), byteOffset);
+    public float ReadReal(int dbNumber, int byteOffset)
+        => BinaryPrimitives.ReadSingleBigEndian(GetArea(dbNumber).AsSpan(byteOffset));
+
     public void WriteReal(int dbNumber, int byteOffset, float value)
-        => Buffer.BlockCopy(BitConverter.GetBytes(value), 0, GetArea(dbNumber), byteOffset, 4);
+        => BinaryPrimitives.WriteSingleBigEndian(GetArea(dbNumber).AsSpan(byteOffset), value);
 
     public string ReadString(int dbNumber, int byteOffset, int maxLen)
     {
