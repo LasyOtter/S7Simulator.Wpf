@@ -12,7 +12,7 @@ public static class ExcelImporter
 {
     public static void ImportFromExcel(string excelPath, PlcMemory memory, Action<string> statusCallback)
     {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+        ExcelPackage.License.SetNonCommercialPersonal("chowjimy");
 
         if (!File.Exists(excelPath)) throw new FileNotFoundException(excelPath);
 

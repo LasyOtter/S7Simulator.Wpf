@@ -25,7 +25,7 @@
                                             <Setter.Value>
                                                 <!-- Bool 用 CheckBox -->
                                                 <DataTemplate>
-                                                    <CheckBox IsChecked="{Binding CurrentValue, Converter={StaticResource BoolConverter}, UpdateSourceTrigger=PropertyChanged}"
+                                                    <CheckBox IsChecked="{Binding EditableValue, Converter={StaticResource BoolConverter}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </DataTemplate>
                                             </Setter.Value>
@@ -35,7 +35,7 @@
                                                 <Setter Property="ContentTemplate">
                                                     <Setter.Value>
                                                         <DataTemplate>
-                                                            <CheckBox IsChecked="{Binding CurrentValue, Converter={StaticResource BoolConverter}, UpdateSourceTrigger=PropertyChanged}"
+                                                            <CheckBox IsChecked="{Binding EditableValue, Converter={StaticResource BoolConverter}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                         </DataTemplate>
                                                     </Setter.Value>
@@ -45,7 +45,7 @@
                                                 <Setter Property="ContentTemplate">
                                                     <Setter.Value>
                                                         <DataTemplate>
-                                                            <TextBox Text="{Binding CurrentValue, UpdateSourceTrigger=LostFocus}" 
+                                                            <TextBox Text="{Binding EditableValue, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" 
                                                                      MinWidth="120"/>
                                                         </DataTemplate>
                                                     </Setter.Value>
@@ -55,7 +55,7 @@
                                                 <Setter Property="ContentTemplate">
                                                     <Setter.Value>
                                                         <DataTemplate>
-                                                            <controls:NumericTextBox Text="{Binding CurrentValue, UpdateSourceTrigger=LostFocus}"
+                                                            <controls:NumericTextBox Text="{Binding EditableValue, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
                                                                                      MinWidth="120"/>
                                                         </DataTemplate>
                                                     </Setter.Value>

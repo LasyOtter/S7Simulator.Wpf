@@ -106,7 +106,30 @@ namespace S7Simulator.Wpf.Views
                 {
                     _currentValue = value;
                     OnPropertyChanged();
+                    // Ensure any UI bound to EditableValue updates when CurrentValue changes
+                    OnPropertyChanged(nameof(EditableValue));
                 }
+            }
+        }
+
+        // Writable mediator for UI bindings. Setting attempts to write to PLC memory.
+        public string EditableValue
+        {
+            get => CurrentValue;
+            set
+            {
+                var newValue = (value ?? string.Empty).Trim();
+                if (newValue == CurrentValue)
+                    return;
+
+                var success = WriteValue(newValue);
+
+                if (!success)
+                {
+                    // If write failed, refresh UI back to the current value
+                    OnPropertyChanged(nameof(EditableValue));
+                }
+                // On success, WriteValue calls RefreshCurrentValue which will update CurrentValue/EditableValue
             }
         }
 

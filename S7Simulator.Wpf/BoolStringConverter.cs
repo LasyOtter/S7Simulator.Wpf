@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using System.Windows.Data;
 
@@ -17,13 +18,21 @@ namespace S7Simulator.Wpf
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return value switch
+            // 修复 CS8116：不能在 switch 表达式中直接使用 bool? 类型模式
+            if (value is bool boolValue)
             {
-                bool boolValue => boolValue.ToString().ToLowerInvariant(),
-                bool? nullableBool => (nullableBool ?? false).ToString().ToLowerInvariant(),
-                string stringValue => stringValue,
-                _ => "false"
-            };
+                return boolValue.ToString().ToLowerInvariant();
+            }
+            // 只能用普通类型判断，不能用模式匹配 bool?
+            if (value is null)
+            {
+                return "false";
+            }
+            if (value is string stringValue)
+            {
+                return stringValue;
+            }
+            return "false";
         }
 
         private static bool ParseString(string value)

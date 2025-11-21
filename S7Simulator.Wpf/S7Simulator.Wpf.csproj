@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="EPPlus" Version="8.2.1" />
+    <PackageReference Include="EPPlus" Version="8.3.0" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" />
     <PackageReference Include="Sharp7" Version="1.1.84" />
   </ItemGroup>
