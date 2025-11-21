@@ -56,27 +56,6 @@ namespace S7Simulator.Wpf.Views
             Closed += (s, e) => _refreshTimer.Stop();
         }
 
-        /// <summary>
-        /// 验证REAL数值输入，只允许数字、小数点和负号
-        /// </summary>
-        private void NumberValidationTextBox(object sender, TextCompositionEventArgs e)
-        {
-            // 允许数字、小数点、负号，但限制小数点只能有一个，负号只能在开头
-            TextBox textBox = (TextBox)sender;
-            string text = textBox.Text.Remove(textBox.SelectionStart, textBox.SelectionLength).Insert(textBox.SelectionStart, e.Text);
-            
-            // 空输入或只有负号是允许的
-            if (string.IsNullOrEmpty(text) || text == "-")
-            {
-                e.Handled = false;
-                return;
-            }
-
-            // 验证是否为有效的浮点数格式
-            bool isValid = float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out _);
-            e.Handled = !isValid;
-        }
-
         #region INotifyPropertyChanged
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string? prop = null)
