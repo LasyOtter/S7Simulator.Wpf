@@ -1438,6 +1438,13 @@ namespace Snap7
             return Srv_RegisterArea(Server, AreaCode, Index, pUsrData, Size);
         }
 
+        [DllImport(S7Consts.Snap7LibName, EntryPoint = "Srv_RegisterArea")]
+        protected static extern int Srv_RegisterArea_Ptr(IntPtr Server, Int32 AreaCode, Int32 Index, IntPtr pUsrData, Int32 Size);
+        public int RegisterArea(Int32 AreaCode, Int32 Index, IntPtr pUsrData, Int32 Size)
+        {
+            return Srv_RegisterArea_Ptr(Server, AreaCode, Index, pUsrData, Size);
+        }
+
         [DllImport(S7Consts.Snap7LibName)]
         protected static extern int Srv_UnregisterArea(IntPtr Server, Int32 AreaCode, Int32 Index);
         public int UnregisterArea(Int32 AreaCode, Int32 Index)

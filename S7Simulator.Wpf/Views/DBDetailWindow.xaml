@@ -61,6 +61,36 @@
                                                     </Setter.Value>
                                                 </Setter>
                                             </DataTrigger>
+                                            <DataTrigger Binding="{Binding DataType}" Value="INT">
+                                                <Setter Property="ContentTemplate">
+                                                    <Setter.Value>
+                                                        <DataTemplate>
+                                                            <controls:NumericTextBox Text="{Binding EditableValue, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                                                                     MinWidth="120"/>
+                                                        </DataTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding DataType}" Value="DINT">
+                                                <Setter Property="ContentTemplate">
+                                                    <Setter.Value>
+                                                        <DataTemplate>
+                                                            <controls:NumericTextBox Text="{Binding EditableValue, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                                                                     MinWidth="120"/>
+                                                        </DataTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding DataType}" Value="BYTE">
+                                                <Setter Property="ContentTemplate">
+                                                    <Setter.Value>
+                                                        <DataTemplate>
+                                                            <controls:NumericTextBox Text="{Binding EditableValue, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                                                                     MinWidth="120"/>
+                                                        </DataTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </ContentControl.Style>

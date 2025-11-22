@@ -43,7 +43,7 @@ namespace S7Simulator.Wpf.Views
             // 300ms 刷新一次当前值（性能与实时性平衡最佳）
             _refreshTimer = new DispatcherTimer(DispatcherPriority.Background)
             {
-                Interval = TimeSpan.FromMilliseconds(300)
+                Interval = TimeSpan.FromMilliseconds(100)
             };
             _refreshTimer.Tick += (s, e) =>
             {

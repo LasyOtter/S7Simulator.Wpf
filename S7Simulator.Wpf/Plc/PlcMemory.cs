@@ -70,7 +70,7 @@ public class PlcMemory
         var data = GetArea(dbNumber);
         byte actualLen = data[byteOffset + 1];
         int len = Math.Min(actualLen, maxLen);
-        return System.Text.Encoding.ASCII.GetString(data, byteOffset + 2, len);
+        return System.Text.Encoding.UTF8.GetString(data, byteOffset + 2, len);
     }
 
     private byte[] GetArea(int dbNumber)
@@ -132,7 +132,7 @@ public class PlcMemory
         int len = Math.Min(value.Length, maxLen);
         data[byteOffset] = (byte)maxLen;
         data[byteOffset + 1] = (byte)len;
-        System.Text.Encoding.ASCII.GetBytes(value, 0, len, data, byteOffset + 2);
+        System.Text.Encoding.UTF8.GetBytes(value, 0, len, data, byteOffset + 2);
     }
 
     private static bool TryParseBool(string value, out bool result)

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using S7Simulator.Wpf.Models;
 using S7Simulator.Wpf.Plc;
 
@@ -10,7 +11,9 @@ namespace S7Simulator.Wpf.Services;
 
 public static class ExcelImporter
 {
-    public static void ImportFromExcel(string excelPath, PlcMemory memory, Action<string> statusCallback)
+    private static readonly log4net.ILog _log = log4net.LogManager.GetLogger(typeof(ExcelImporter));
+    
+    public static async Task ImportFromExcelAsync(string excelPath, PlcMemory memory, Action<string> statusCallback)
     {
         ExcelPackage.License.SetNonCommercialPersonal("chowjimy");
 
@@ -50,9 +53,12 @@ public static class ExcelImporter
         foreach (var db in dbDict.Values)
         {
             memory.ApplyDbStructure(db);
-            DatabaseService.SaveDb(db);
+            await DatabaseService.Instance.SaveDbAsync(db);
         }
 
-        statusCallback?.Invoke($"成功从 Excel 导入 {dbDict.Count} 个 DB，共 {dbDict.Values.Sum(d => d.Variables.Count)} 个变量");
+        var totalVars = dbDict.Values.Sum(d => d.Variables.Count);
+        var message = $"成功从 Excel 导入 {dbDict.Count} 个 DB,共 {totalVars} 个变量";
+        statusCallback?.Invoke(message);
+        _log.Info($"Excel import completed: {dbDict.Count} DBs, {totalVars} variables from {excelPath}");
     }
-}   
+}

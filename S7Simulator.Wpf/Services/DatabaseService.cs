@@ -4,18 +4,25 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace S7Simulator.Wpf.Services;
 
-public static class DatabaseService
+public class DatabaseService
 {
+    private static readonly log4net.ILog _log = log4net.LogManager.GetLogger(typeof(DatabaseService));
     private static readonly string DbPath = "simulator.db";
     private static readonly string ConnStr = $"Data Source={DbPath}";
 
-    public static void Initialize()
+    // Simple Singleton for now, can be replaced by DI later
+    public static DatabaseService Instance { get; } = new DatabaseService();
+
+    private DatabaseService() { }
+
+    public async Task InitializeAsync()
     {
         using var conn = new SqliteConnection(ConnStr);
-        conn.Open();
+        await conn.OpenAsync();
         var cmd = conn.CreateCommand();
         cmd.CommandText = """
             CREATE TABLE IF NOT EXISTS DbInfo (
@@ -34,21 +41,24 @@ public static class DatabaseService
                 Comment TEXT
             );
             """;
-        cmd.ExecuteNonQuery();
+        await cmd.ExecuteNonQueryAsync();
+        _log.Info("Database initialized successfully");
     }
 
-    public static void SaveDb(DbInfo db)
+    public async Task SaveDbAsync(DbInfo db)
     {
         using var conn = new SqliteConnection(ConnStr);
-        conn.Open();
-        using var tran = conn.BeginTransaction();
+        await conn.OpenAsync();
+        using var tran = (SqliteTransaction)await conn.BeginTransactionAsync();
 
         var del = conn.CreateCommand();
+        del.Transaction = tran;
         del.CommandText = "DELETE FROM Variables WHERE DbNumber = $db";
         del.Parameters.AddWithValue("$db", db.DbNumber);
-        del.ExecuteNonQuery();
+        await del.ExecuteNonQueryAsync();
 
         var cmd = conn.CreateCommand();
+        cmd.Transaction = tran;
         cmd.CommandText = """
             INSERT OR REPLACE INTO DbInfo (DbNumber, Name, ImportedAt)
             VALUES ($num, $name, $time)
@@ -59,41 +69,54 @@ public static class DatabaseService
         cmd.Parameters.AddWithValue("$num", db.DbNumber);
         cmd.Parameters.AddWithValue("$name", db.Name);
         cmd.Parameters.AddWithValue("$time", importedAt.ToString("o"));
-        cmd.ExecuteNonQuery();
+        await cmd.ExecuteNonQueryAsync();
+
+        var vcmd = conn.CreateCommand();
+        vcmd.Transaction = tran;
+        vcmd.CommandText = """
+            INSERT INTO Variables 
+            (DbNumber, Name, DataType, ByteOffset, BitOffset, InitialValue, Comment)
+            VALUES ($db, $name, $type, $off, $bit, $init, $cmt)
+            """;
+        
+        // Create parameters once
+        var pDb = vcmd.Parameters.Add("$db", SqliteType.Integer);
+        var pName = vcmd.Parameters.Add("$name", SqliteType.Text);
+        var pType = vcmd.Parameters.Add("$type", SqliteType.Text);
+        var pOff = vcmd.Parameters.Add("$off", SqliteType.Integer);
+        var pBit = vcmd.Parameters.Add("$bit", SqliteType.Integer);
+        var pInit = vcmd.Parameters.Add("$init", SqliteType.Text);
+        var pCmt = vcmd.Parameters.Add("$cmt", SqliteType.Text);
 
         foreach (var v in db.Variables)
         {
-            var vcmd = conn.CreateCommand();
-            vcmd.CommandText = """
-                INSERT INTO Variables 
-                (DbNumber, Name, DataType, ByteOffset, BitOffset, InitialValue, Comment)
-                VALUES ($db, $name, $type, $off, $bit, $init, $cmt)
-                """;
-            vcmd.Parameters.AddWithValue("$db", db.DbNumber);
-            vcmd.Parameters.AddWithValue("$name", v.Name);
-            vcmd.Parameters.AddWithValue("$type", v.DataType);
-            vcmd.Parameters.AddWithValue("$off", v.ByteOffset);
-            vcmd.Parameters.AddWithValue("$bit", v.BitOffset);
-            vcmd.Parameters.AddWithValue("$init", v.InitialValue ?? (object)DBNull.Value);
-            vcmd.Parameters.AddWithValue("$cmt", v.Comment ?? (object)DBNull.Value);
-            vcmd.ExecuteNonQuery();
+            pDb.Value = db.DbNumber;
+            pName.Value = v.Name;
+            pType.Value = v.DataType;
+            pOff.Value = v.ByteOffset;
+            pBit.Value = v.BitOffset;
+            pInit.Value = v.InitialValue ?? (object)DBNull.Value;
+            pCmt.Value = v.Comment ?? (object)DBNull.Value;
+            
+            await vcmd.ExecuteNonQueryAsync();
         }
 
-        tran.Commit();
+        await tran.CommitAsync();
+        _log.Info($"Saved DB{db.DbNumber} with {db.Variables.Count} variables");
     }
 
-    public static List<DbInfo> LoadAllDbs()
+    public async Task<List<DbInfo>> LoadAllDbsAsync()
     {
         using var conn = new SqliteConnection(ConnStr);
-        conn.Open();
+        await conn.OpenAsync();
 
         var result = new Dictionary<int, DbInfo>();
 
         var dbCmd = conn.CreateCommand();
         dbCmd.CommandText = "SELECT DbNumber, Name, ImportedAt FROM DbInfo ORDER BY DbNumber";
-        using (var reader = dbCmd.ExecuteReader())
+        using (var reader = await dbCmd.ExecuteReaderAsync())
         {
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
                 var dbNumber = reader.GetInt32(0);
                 var db = new DbInfo
@@ -119,9 +142,9 @@ public static class DatabaseService
             ORDER BY DbNumber, ByteOffset, BitOffset
             """;
 
-        using (var reader = varCmd.ExecuteReader())
+        using (var reader = await varCmd.ExecuteReaderAsync())
         {
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
                 var dbNumber = reader.GetInt32(0);
                 if (!result.TryGetValue(dbNumber, out var db))
